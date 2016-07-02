@@ -1,0 +1,4 @@
+#!/bin/bash
+DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )/.."
+VERSION=`cat $DIR/VERSION`
+printf "package main\nconst(\n VERSION=\""$VERSION"\"\n)\n" > $DIR/version.go

@@ -1,0 +1,25 @@
+#!/bin/bash
+
+AWS_API_KEY=$1
+TASK_DEFINITION=$2
+CONTAINER_NAME=$3
+
+DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )/.."
+VERSION=`cat $DIR/VERSION`
+
+function push {
+
+    if [ "${AWS_API_KEY} " = " " ]; then
+        echo "No AWS API key"
+        exit 1;
+    fi
+
+    echo "{\"app\": \"${TASK_DEFINITION}\", \"version\": \"${VERSION}\", \"container\": \"${CONTAINER_NAME}\" }"
+    curl -H "X-Api-Key: ${AWS_API_KEY}" -X POST $WEBHOOK_LOCATION -d "{\"app\": \"${TASK_DEFINITION}\", \"version\": \"${VERSION}\", \"container\": \"${CONTAINER_NAME}\" }"
+}
+
+case "${TRAVIS_BRANCH}" in
+    "master" ) push ;;
+    * ) echo "not pushing when off master branch"; exit 0;;
+esac
+

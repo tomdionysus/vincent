@@ -1,0 +1,12 @@
+#!/bin/bash
+set -e
+
+DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )/.."
+VERSION=`cat $DIR/VERSION`
+$DIR/bin/make_linux
+rm -rf $DIR/archive
+mkdir $DIR/archive
+
+echo ${TRAVIS_BRANCH} > $DIR/BRANCH
+echo ${TRAVIS_TIX_API_TEST_TRIGGER_TOKEN} > $DIR/TRAVIS_TIX_API_TEST_TRIGGER_TOKEN
+tar czvf $DIR/archive/vincent-demo-${VERSION}.tar.gz $DIR/build/* $DIR/appspec.yml $DIR/codedeploy $DIR/BRANCH $DIR/TRAVIS_TIX_API_TEST_TRIGGER_TOKEN

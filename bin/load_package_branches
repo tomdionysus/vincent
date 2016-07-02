@@ -1,0 +1,18 @@
+#!/bin/bash
+DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )/.."
+if [ ! -r $DIR/.golang-branches ]; then exit; fi
+PACKAGES=`cat $DIR/.golang-branches`
+for p in $PACKAGES; do
+	PACKAGE=`echo $p | awk -F ":" '{print $1}'`
+	BRANCH=`echo $p | awk -F ":" '{print $2}'`
+	BRANCH=$(eval "echo $BRANCH")
+	go get $PACKAGE
+	cd $GOPATH/src/$PACKAGE
+	git show-ref --verify --quiet refs/heads/$BRANCH
+	if [ "$?" == "0" ]; then
+		echo "Switching $PACKAGE to branch '$BRANCH'"
+		git checkout $BRANCH
+	else 
+		echo "No $PACKAGE branch '$BRANCH', falling back to master"
+	fi
+done
