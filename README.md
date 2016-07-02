@@ -10,6 +10,13 @@ Vincent is a very lightweight golang Web framework.
 
 import "github.com/tomdionysus/vincent"
 
-
 ```
+
+## Server
+
+```bash
+vincent [<template directory>] [--port <port>]
+```
+
+## Directory Structure
 
