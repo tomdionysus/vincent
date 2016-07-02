@@ -21,6 +21,8 @@ func NewRouteSegment(svr *Server) *RouteSegment {
 
 func (me *RouteSegment) Render(path string, req *http.Request, res http.ResponseWriter, context map[string]interface{}) (bool, error) {
   path = strings.TrimLeft(path,"/")
+  // Special case if path is empty.
+  if sgm, ok := me.Segments[me.Server.DefaultDocument]; path == "" && ok { return sgm.Render(path, req, res, context) }
   if len(path)!=0 { return me.Passthrough(path, req, res, context) }
   return false, nil
 }
@@ -41,6 +43,8 @@ func (me *RouteSegment) Passthrough(path string, req *http.Request, res http.Res
   if ok {
     return sgm.Render(path, req, res, context)
   } else {
+    
+    // Otherwise not found
     return false, nil
   }
 }

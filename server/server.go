@@ -16,11 +16,13 @@ type Server struct {
   Log log.Logger
 
   Root *RouteSegment
+  DefaultDocument string
 }
 
 func New(logger log.Logger) (*Server, error) {
   inst := &Server{
     Log: log.NewScopedLogger("Vincent", logger),
+    DefaultDocument: "index.html",
   }
   inst.Root = NewRouteSegment(inst)
   return inst, nil
