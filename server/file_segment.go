@@ -8,11 +8,13 @@ import(
   "path/filepath"
 )
 
+// A segment of a route that represents a raw file
 type FileSegment struct {
   RouteSegment
   Filename string
 }
 
+// Return a new FileSegment with the supplied filename
 func NewFileSegment(filename string) *FileSegment {
   inst := &FileSegment{
     Filename: filename,
@@ -20,6 +22,8 @@ func NewFileSegment(filename string) *FileSegment {
   return inst
 }
 
+// If the path refers to this segment, render the supplied path to the responsewriter. Otherwise, passthrough to
+// sub segments.
 func (me *FileSegment) Render(path string, req *http.Request, res http.ResponseWriter, context map[string]interface{}) (bool, error) {
   path = strings.TrimLeft(path,"/")
   

@@ -12,6 +12,7 @@ import(
   "net/http"
 )
 
+// Server is a HTTP server for use with vincent projects. 
 type Server struct {
   Log log.Logger
 
@@ -19,15 +20,18 @@ type Server struct {
   DefaultDocument string
 }
 
+// Return a new Server with the specified logger
 func New(logger log.Logger) (*Server, error) {
   inst := &Server{
-    Log: log.NewScopedLogger("Vincent", logger),
+    Log: logger,
     DefaultDocument: "index.html",
   }
   inst.Root = NewRouteSegment(inst)
   return inst, nil
 }
 
+// Walk the supplied basePath directory and parse all files and templates into routes
+// using the route prefix specified.
 func (me *Server) LoadTemplates(routePrefix, basePath string) error {
 
   wfn := func(path string, info os.FileInfo, err error) error {
@@ -41,8 +45,10 @@ func (me *Server) LoadTemplates(routePrefix, basePath string) error {
       template, err := raymond.ParseFile(path)
       if err!=nil { return err }
       me.Root.Add(route, NewTemplateSegment(template))
+    case ".raw":
+      fallthrough
     default:
-      route := routePrefix+strings.TrimSuffix(path[len(basePath)+1:], ".hbs")
+      route := routePrefix+strings.TrimSuffix(path[len(basePath)+1:], ".raw")
       fn, err := filepath.Abs(path)
       if err!=nil { return err }
       me.Root.Add(route, NewFileSegment(fn))
@@ -54,6 +60,7 @@ func (me *Server) LoadTemplates(routePrefix, basePath string) error {
  return filepath.Walk(basePath, wfn)
 }
 
+// Start the HTTP server on the specified address and port, of format "<host>:<port>", e.g. "localhost:8080"
 func (me *Server) Start(addr string) {
   go func(){ 
     ln, err := net.Listen("tcp", addr)
@@ -66,11 +73,11 @@ func (me *Server) Start(addr string) {
   }()
 }
 
+// Support the http.Handler ServeHTTP method. This is called once per request
 func (me *Server) ServeHTTP(wr http.ResponseWriter, r *http.Request) {
   path := r.URL.EscapedPath()
 
   w := NewBufferedResponseWriter()
-
   t := time.Now()
 
   context := map[string]interface{}{
@@ -83,7 +90,7 @@ func (me *Server) ServeHTTP(wr http.ResponseWriter, r *http.Request) {
   defer func(){
     rec := recover();
     size := formatByteSize(w.Buffer.Len())
-    w.WriteToResponseWriter(wr)
+    w.FlushToResponseWriter(wr)
 
     elapsed := time.Now().Sub(t).Seconds() / 1000
     me.Log.Info("[%s] %s %s [%d] (%s/%.2fms)", r.RemoteAddr, r.Method, path, w.StatusCode, size, elapsed)
@@ -101,5 +108,4 @@ func (me *Server) ServeHTTP(wr http.ResponseWriter, r *http.Request) {
   if !ok { w.StatusCode = 404; return }
   w.StatusCode = 200
   return
-
 }
