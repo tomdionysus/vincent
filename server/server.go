@@ -6,10 +6,10 @@ import(
   "github.com/tomdionysus/vincent/log"
   "path/filepath"
   "os"
-  "fmt"
-  "net/http"
   "time"
   "strings"
+  "net"
+  "net/http"
 )
 
 type Server struct {
@@ -52,9 +52,15 @@ func (me *Server) LoadTemplates(routePrefix, basePath string) error {
  return filepath.Walk(basePath, wfn)
 }
 
-func (me *Server) Start(port uint16) {
+func (me *Server) Start(addr string) {
   go func(){ 
-    http.ListenAndServe(fmt.Sprintf(":%d",port), me) 
+    ln, err := net.Listen("tcp", addr)
+    if err != nil { return }
+    limitListener := NewConnLimitListener(250, ln.(*net.TCPListener))
+
+    server := &http.Server{ Handler: me }
+
+    server.Serve(limitListener)
   }()
 }
 
@@ -74,10 +80,10 @@ func (me *Server) ServeHTTP(wr http.ResponseWriter, r *http.Request) {
 
   defer func(){
     rec := recover();
+    size := formatByteSize(w.Buffer.Len())
     w.WriteToResponseWriter(wr)
 
     elapsed := time.Now().Sub(t).Seconds() / 1000
-    size := formatByteSize(w.Buffer.Len())
     me.Log.Info("[%s] %s %s [%d] (%s/%.2fms)", r.RemoteAddr, r.Method, path, w.StatusCode, size, elapsed)
 
     if rec != nil { me.Log.Error("> PANIC: %s", rec) }

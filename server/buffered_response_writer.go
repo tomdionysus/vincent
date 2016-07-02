@@ -3,12 +3,11 @@ package server
 import(
   "net/http"
   "bytes"
-  "encoding/gob"
 )
 
 type BufferedResponseWriter struct {
-  Buffer *bytes.Buffer
   Headers http.Header
+  Buffer *bytes.Buffer
   StatusCode int
 }
 
@@ -17,20 +16,6 @@ func NewBufferedResponseWriter() *BufferedResponseWriter {
     Buffer: &bytes.Buffer{},
     Headers: http.Header{},
   }
-}
-
-func DeserialiseBufferedResponseWriter(buf []byte) *BufferedResponseWriter {
-  me := &BufferedResponseWriter{}
-
-  dec := gob.NewDecoder(bytes.NewBuffer(buf))
-  dec.Decode(&me.StatusCode)
-  dec.Decode(&me.Headers)
-
-  b := []byte{}
-  dec.Decode(&b)
-  me.Buffer = bytes.NewBuffer(b)
-
-  return me
 }
 
 func (me *BufferedResponseWriter) Header() http.Header {
@@ -43,15 +28,6 @@ func (me *BufferedResponseWriter) Write(data []byte) (int, error) {
 
 func (me *BufferedResponseWriter) WriteHeader(code int) {
   me.StatusCode = code
-}
-
-func (me *BufferedResponseWriter) Serialise() []byte {
-  buf := &bytes.Buffer{}
-  enc := gob.NewEncoder(buf)
-  enc.Encode(me.StatusCode)
-  enc.Encode(me.Headers)
-  enc.Encode(me.Buffer.Bytes())
-  return buf.Bytes()
 }
 
 func (me *BufferedResponseWriter) WriteToResponseWriter(w http.ResponseWriter) error {
