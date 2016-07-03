@@ -10,6 +10,7 @@ import(
   "strings"
   "net"
   "net/http"
+  "crypto/tls"
 )
 
 // Server is a HTTP server for use with vincent projects. 
@@ -70,6 +71,28 @@ func (me *Server) Start(addr string) {
     server := &http.Server{ Handler: me }
 
     server.Serve(limitListener)
+  }()
+}
+
+// Start the HTTP server on the specified address and port, of format "<host>:<port>", e.g. "localhost:8080"
+func (me *Server) StartTLS(addr, certFile, keyFile string) {
+  go func(){ 
+    // TCP Layer
+    tcpLn, err := net.Listen("tcp", addr)
+    if err != nil { me.Log.Error("Cannot Listen on %s", addr); return }
+
+    // Conn limiter
+    clLn := NewConnLimitListener(250, tcpLn.(*net.TCPListener))
+
+    // TLS Layer
+    cer, err := tls.LoadX509KeyPair(certFile, keyFile)
+    if err != nil { me.Log.Error("Cannot Load Cert, Key %s, %s", certFile, keyFile); return }
+    config := &tls.Config{Certificates: []tls.Certificate{cer}}
+
+    tlsLn := tls.NewListener(clLn, config)
+
+    server := &http.Server{ Handler: me }
+    server.Serve(tlsLn)
   }()
 }
 
