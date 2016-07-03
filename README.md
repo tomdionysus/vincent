@@ -1,4 +1,4 @@
-[![Vincent](docs/vincent.png)]
+![Vincent](docs/vincent.png)
 
 # Vincent
 
