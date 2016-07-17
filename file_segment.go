@@ -1,14 +1,12 @@
-package server
-
+package vincent
 import(
-  "net/http"
   "strings"
   "io/ioutil"
   "mime"
   "path/filepath"
 )
 
-// A segment of a route that represents a raw file
+// A segment of a route that repcontext.ResponseWriterents a raw file
 type FileSegment struct {
   RouteSegment
   Filename string
@@ -22,24 +20,27 @@ func NewFileSegment(filename string) *FileSegment {
   return inst
 }
 
-// If the path refers to this segment, render the supplied path to the responsewriter. Otherwise, passthrough to
+// If the path refers to this segment, render the supplied path to the context.ResponseWriterponsewriter. Otherwise, passthrough to
 // sub segments.
-func (me *FileSegment) Render(path string, req *http.Request, res http.ResponseWriter, context map[string]interface{}) (bool, error) {
+func (me *FileSegment) Render(path string, context *Context) (bool, error) {
+  ok, err := me.CallControllers(context)
+  if !ok || err!=nil { return ok, err }
+  
   path = strings.TrimLeft(path,"/")
   
   if len(path) == 0 {
     // This is the last segment
 
     ext := filepath.Ext(me.Filename)
-    h := res.Header()
+    h := context.ResponseWriter.Header()
 
     h["Content-Type"] = append(h["Content-Type"], mime.TypeByExtension(ext))
 
     out, err := ioutil.ReadFile(me.Filename)
     if err!=nil { return false, err }
-    res.Write(out)
+    context.ResponseWriter.Write(out)
     return true, nil
   }
 
-  return me.Passthrough(path, req, res, context)
+  return me.Passthrough(path, context)
 }

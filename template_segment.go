@@ -1,8 +1,6 @@
-package server
-
+package vincent
 import(
   "github.com/aymerick/raymond"
-  "net/http"
   "strings"
 )
 
@@ -22,16 +20,19 @@ func NewTemplateSegment(template *raymond.Template) *TemplateSegment {
 
 // If the path ends with this segment, render the template using the supplied context to the responsewriter.
 // Otherwise, passthrough to sub segments.
-func (me *TemplateSegment) Render(path string, req *http.Request, res http.ResponseWriter, context map[string]interface{}) (bool, error) {
+func (me *TemplateSegment) Render(path string, context *Context) (bool, error) {
+  ok, err := me.CallControllers(context)
+  if !ok || err!=nil { return ok, err }
+  
   path = strings.TrimLeft(path,"/")
   
   if len(path) == 0 {
     // This is the last segment
-    out, err := me.Template.Exec(context)
+    out, err := me.Template.Exec(context.Output)
     if err!=nil { return false, err }
-    res.Write([]byte(out))
+    context.ResponseWriter.Write([]byte(out))
     return true, nil
   }
 
-  return me.Passthrough(path, req, res, context)
+  return me.Passthrough(path, context)
 }

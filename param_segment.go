@@ -1,7 +1,5 @@
-package server
-
+package vincent
 import(
-  "net/http"
   "strings"
 )
 
@@ -20,7 +18,10 @@ func NewParamSegment(paramName string) *ParamSegment {
 }
 
 // Load the current segment value into the context and passthrough.
-func (me *ParamSegment) Render(path string, req *http.Request, res http.ResponseWriter, context map[string]interface{}) (bool, error) {
+func (me *ParamSegment) Render(path string, context *Context) (bool, error) {
+  ok, err := me.CallControllers(context)
+  if !ok || err!=nil { return ok, err }
+  
   path = strings.TrimLeft(path,"/")
   
   c := strings.Index(path,"/")
@@ -34,7 +35,7 @@ func (me *ParamSegment) Render(path string, req *http.Request, res http.Response
     path = path[c+1:]
   }
 
-  context[me.ParamName] = value
+  context.Params[me.ParamName] = value
 
-  return me.Passthrough(path, req, res, context)
+  return me.Passthrough(path, context)
 }

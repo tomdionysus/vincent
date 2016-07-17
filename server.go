@@ -1,8 +1,6 @@
-package server
-
+package vincent
 import(
   "github.com/aymerick/raymond"
-  "github.com/tomdionysus/vincent"
   "github.com/tomdionysus/vincent/log"
   "path/filepath"
   "os"
@@ -96,6 +94,10 @@ func (me *Server) StartTLS(addr, certFile, keyFile string) {
   }()
 }
 
+func (me *Server) AddController(path string, controller Controller) {
+  me.Root.AddController(path, controller)
+}
+
 // Support the http.Handler ServeHTTP method. This is called once per request
 func (me *Server) ServeHTTP(wr http.ResponseWriter, r *http.Request) {
   path := r.URL.EscapedPath()
@@ -103,12 +105,7 @@ func (me *Server) ServeHTTP(wr http.ResponseWriter, r *http.Request) {
   w := NewBufferedResponseWriter()
   t := time.Now()
 
-  context := map[string]interface{}{
-    "vincent": map[string]interface{}{
-      "version": vincent.VERSION,
-      "port": 8080,
-    },
-  }
+  context := NewContext(me, w,r)
 
   defer func(){
     rec := recover();
@@ -121,7 +118,7 @@ func (me *Server) ServeHTTP(wr http.ResponseWriter, r *http.Request) {
     if rec != nil { me.Log.Error("> PANIC: %s", rec) }
   }()
 
-  ok, err := me.Root.Render(path, r, w, context)
+  ok, err := me.Root.Render(path, context)
   if err!=nil {
     me.Log.Error("Error while processing [%s] %s %s", r.Method, r.RemoteAddr, path)
     w.StatusCode = 500

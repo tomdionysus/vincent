@@ -1,7 +1,5 @@
-package server
-
+package vincent
 import(
-  "net/http"
   "strings"
 )
 
@@ -9,6 +7,7 @@ import(
 type RouteSegment struct {
   Server *Server
   Segments map[string]Handler
+  Controllers []Controller
 }
 
 // Return a new RouteSegment for the supplied server
@@ -20,17 +19,27 @@ func NewRouteSegment(svr *Server) *RouteSegment {
   return inst
 }
 
-// Parse the path and passthrough, substituting the DefaultDocument (if available) for an empty segment.
-func (me *RouteSegment) Render(path string, req *http.Request, res http.ResponseWriter, context map[string]interface{}) (bool, error) {
+func (me *RouteSegment) Render(path string, context *Context) (bool, error) {
+  ok, err := me.CallControllers(context)
+  if !ok || err!=nil { return ok, err }
+
   path = strings.TrimLeft(path,"/")
   // Special case if path is empty.
-  if sgm, ok := me.Segments[me.Server.DefaultDocument]; path == "" && ok { return sgm.Render(path, req, res, context) }
-  if len(path)!=0 { return me.Passthrough(path, req, res, context) }
+  if sgm, ok := me.Segments[me.Server.DefaultDocument]; path == "" && ok { return sgm.Render(path, context) }
+  if len(path)!=0 { return me.Passthrough(path, context) }
   return false, nil
 }
 
+func (me *RouteSegment) CallControllers(context *Context) (bool, error) {
+  for _, controller := range me.Controllers {
+    ok, err := controller(context)
+    if !ok || err!=nil { return ok, err }
+  }
+  return true, nil
+}
+
 // Process the path and call Render on subroute handlers
-func (me *RouteSegment) Passthrough(path string, req *http.Request, res http.ResponseWriter, context map[string]interface{}) (bool, error) {
+func (me *RouteSegment) Passthrough(path string, context *Context) (bool, error) {
   c := strings.Index(path,"/")
 
   var sgmName string
@@ -44,7 +53,7 @@ func (me *RouteSegment) Passthrough(path string, req *http.Request, res http.Res
 
   sgm, ok := me.Segments[sgmName]
   if ok {
-    return sgm.Render(path, req, res, context)
+    return sgm.Render(path, context)
   } else {
     
     // Otherwise not found
@@ -80,6 +89,32 @@ func (me *RouteSegment) Add(path string, handler Handler) error {
   }
 
   return nil
+}
+
+func (me *RouteSegment) AddController(path string, controller Controller) {
+  path = strings.TrimLeft(path,"/")
+
+  if path == "" {
+    me.Controllers = append(me.Controllers, controller)
+    return
+  }
+
+  c := strings.Index(path,"/")
+  var sgmName string
+  if c == -1 {
+    sgmName = path
+    path = ""
+  } else {
+    sgmName = path[:c]
+    path = path[c+1:]
+  }
+
+  sgm, ok := me.Segments[sgmName]
+  if !ok {
+    sgm = NewRouteSegment(me.Server)
+    me.Segments[sgmName] = sgm
+  }
+  sgm.AddController(path, controller)
 }
 
 // A function to walk the segment tree
