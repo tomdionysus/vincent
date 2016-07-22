@@ -1,41 +1,44 @@
 package vincent
-import(
-  "strings"
+
+import (
+	"strings"
 )
 
 // A segment of a route that represents a parameter
 type ParamSegment struct {
-  RouteSegment
-  ParamName string
+	RouteSegment
+	ParamName string
 }
 
 // Return a new ParamSegment with the supplied name, e.g. "identity" or "identity.name"
 func NewParamSegment(paramName string) *ParamSegment {
-  inst := &ParamSegment{
-    ParamName: paramName,
-  }
-  return inst
+	inst := &ParamSegment{
+		ParamName: paramName,
+	}
+	return inst
 }
 
 // Load the current segment value into the context and passthrough.
 func (me *ParamSegment) Render(path string, context *Context) (bool, error) {
-  ok, err := me.CallControllers(context)
-  if !ok || err!=nil { return ok, err }
-  
-  path = strings.TrimLeft(path,"/")
-  
-  c := strings.Index(path,"/")
+	ok, err := me.CallControllers(context)
+	if !ok || err != nil {
+		return ok, err
+	}
 
-  var value string
-  if c == -1 {
-    value = path
-    path = ""
-  } else {
-    value = path[:c]
-    path = path[c+1:]
-  }
+	path = strings.TrimLeft(path, "/")
 
-  context.Params[me.ParamName] = value
+	c := strings.Index(path, "/")
 
-  return me.Passthrough(path, context)
+	var value string
+	if c == -1 {
+		value = path
+		path = ""
+	} else {
+		value = path[:c]
+		path = path[c+1:]
+	}
+
+	context.Params[me.ParamName] = value
+
+	return me.Passthrough(path, context)
 }

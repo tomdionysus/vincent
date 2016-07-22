@@ -1,28 +1,29 @@
 package vincent
-import(
-  "net/http"
+
+import (
+	"net/http"
 )
 
 type Context struct {
-  Server *Server
+	Server *Server
 
-  Request *http.Request
-  ResponseWriter http.ResponseWriter
+	Request        *http.Request
+	ResponseWriter http.ResponseWriter
 
-  Params map[string]interface{}
+	Params map[string]interface{}
 
-  Input map[string]interface{}
-  Output map[string]interface{}
+	Input  map[string]interface{}
+	Output map[string]interface{}
 }
 
 func NewContext(server *Server, w http.ResponseWriter, r *http.Request) *Context {
-  i := &Context{
-    Server: server,
-    Request: r,
-    ResponseWriter: w,
-    Params: map[string]interface{}{},
-    Input: map[string]interface{}{},
-    Output: map[string]interface{}{},
-  }
-  return i
+	i := &Context{
+		Server:         server,
+		Request:        r,
+		ResponseWriter: w,
+		Params:         map[string]interface{}{},
+		Input:          map[string]interface{}{},
+		Output:         map[string]interface{}{},
+	}
+	return i
 }
