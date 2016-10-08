@@ -18,3 +18,10 @@ import "github.com/tomdionysus/vincent"
 
 Please see [vincent-demo](https://github.com/tomdionysus/vincent-demo) for a complete example.
 
+## License
+
+vincent is licensed under the Open Source MIT license. Please see the [License File](LICENSE.txt) for more details.
+
+## Code Of Conduct
+
+The vincent project supports and enforces [The Contributor Covenant](http://contributor-covenant.org/) code of conduct. Please read [the code of conduct](CODE_OF_CONDUCT.md) before contributing.
