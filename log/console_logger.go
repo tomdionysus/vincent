@@ -6,14 +6,14 @@ import (
 	"sync"
 )
 
-// This is a type to provide ConsoleLogger to the system
+// ConsoleLogger is a type to provide ConsoleLogger to the system
 type ConsoleLogger struct {
 	LogLevel int
 
 	mutex *sync.Mutex
 }
 
-// The function creates a New ConsoleLogger with the loglevel supplied
+// NewConsoleLogger creates a New ConsoleLogger with the loglevel supplied
 func NewConsoleLogger(logLevel string) *ConsoleLogger {
 	logger := &ConsoleLogger{
 		LogLevel: parseLogLevel(strings.ToLower(strings.Trim(logLevel, " "))),
@@ -26,25 +26,28 @@ func NewConsoleLogger(logLevel string) *ConsoleLogger {
 	return logger
 }
 
-func (clg *ConsoleLogger) GetLogLevel() int         { return clg.LogLevel }
+// GetLogLevel gets the current log level
+func (clg *ConsoleLogger) GetLogLevel() int { return clg.LogLevel }
+
+// SetLogLevel sets the current log level
 func (clg *ConsoleLogger) SetLogLevel(loglevel int) { clg.LogLevel = loglevel }
 
-// Logs a Raw message (-----) with the specified message and Printf-style arguments.
+// Raw logs a Raw message (-----) with the specified message and Printf-style arguments.
 func (clg *ConsoleLogger) Raw(message string, args ...interface{}) {
 	clg.printLog("-----", message, args...)
 }
 
-// Logs a FATAL message with the specified message and Printf-style arguments.
+// Fatal logs a FATAL message with the specified message and Printf-style arguments.
 func (clg *ConsoleLogger) Fatal(message string, args ...interface{}) {
 	clg.printLog("FATAL", message, args...)
 }
 
-// Logs an ERROR message with the specified message and Printf-style arguments.
+// Error logs an ERROR message with the specified message and Printf-style arguments.
 func (clg *ConsoleLogger) Error(message string, args ...interface{}) {
 	clg.printLog("ERROR", message, args...)
 }
 
-// Logs a WARN message with the specified message and Printf-style arguments.
+// Warn logs a WARN message with the specified message and Printf-style arguments.
 func (clg *ConsoleLogger) Warn(message string, args ...interface{}) {
 	if clg.LogLevel > LOG_LEVEL_WARN {
 		return
@@ -52,7 +55,7 @@ func (clg *ConsoleLogger) Warn(message string, args ...interface{}) {
 	clg.printLog("WARN ", message, args...)
 }
 
-// Logs an INFO message with the specified message and Printf-style arguments.
+// Info logs an INFO message with the specified message and Printf-style arguments.
 func (clg *ConsoleLogger) Info(message string, args ...interface{}) {
 	if clg.LogLevel > LOG_LEVEL_INFO {
 		return
@@ -60,7 +63,7 @@ func (clg *ConsoleLogger) Info(message string, args ...interface{}) {
 	clg.printLog("INFO ", message, args...)
 }
 
-// Logs a DEBUG message with the specified message and Printf-style arguments.
+// Debug logs a DEBUG message with the specified message and Printf-style arguments.
 func (clg *ConsoleLogger) Debug(message string, args ...interface{}) {
 	if clg.LogLevel > LOG_LEVEL_DEBUG {
 		return
