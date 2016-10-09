@@ -32,13 +32,13 @@ func New(logger log.Logger) (*Server, error) {
 
 // Walk the supplied basePath directory and parse all files and templates into routes
 // using the route prefix specified.
-func (me *Server) LoadTemplates(routePrefix, basePath string) error {
+func (svr *Server) LoadTemplates(routePrefix, basePath string) error {
 
 	wfn := func(path string, info os.FileInfo, err error) error {
 		if info.IsDir() {
 			return nil
 		}
-		me.Log.Debug("Loading: %s", path)
+		svr.Log.Debug("Loading: %s", path)
 
 		ext := filepath.Ext(path)
 		switch ext {
@@ -48,7 +48,7 @@ func (me *Server) LoadTemplates(routePrefix, basePath string) error {
 			if err != nil {
 				return err
 			}
-			me.Root.Add(route, NewTemplateSegment(template))
+			svr.Root.Add(route, NewTemplateSegment(template))
 		case ".raw":
 			fallthrough
 		default:
@@ -57,7 +57,7 @@ func (me *Server) LoadTemplates(routePrefix, basePath string) error {
 			if err != nil {
 				return err
 			}
-			me.Root.Add(route, NewFileSegment(fn))
+			svr.Root.Add(route, NewFileSegment(fn))
 		}
 
 		return nil
@@ -67,7 +67,7 @@ func (me *Server) LoadTemplates(routePrefix, basePath string) error {
 }
 
 // Start the HTTP server on the specified address and port, of format "<host>:<port>", e.g. "localhost:8080"
-func (me *Server) Start(addr string) {
+func (svr *Server) Start(addr string) {
 	go func() {
 		ln, err := net.Listen("tcp", addr)
 		if err != nil {
@@ -75,19 +75,19 @@ func (me *Server) Start(addr string) {
 		}
 		limitListener := NewConnLimitListener(250, ln.(*net.TCPListener))
 
-		server := &http.Server{Handler: me}
+		server := &http.Server{Handler: svr}
 
 		server.Serve(limitListener)
 	}()
 }
 
 // Start the HTTP server on the specified address and port, of format "<host>:<port>", e.g. "localhost:8080"
-func (me *Server) StartTLS(addr, certFile, keyFile string) {
+func (svr *Server) StartTLS(addr, certFile, keyFile string) {
 	go func() {
 		// TCP Layer
 		tcpLn, err := net.Listen("tcp", addr)
 		if err != nil {
-			me.Log.Error("Cannot Listen on %s", addr)
+			svr.Log.Error("Cannot Listen on %s", addr)
 			return
 		}
 
@@ -97,30 +97,30 @@ func (me *Server) StartTLS(addr, certFile, keyFile string) {
 		// TLS Layer
 		cer, err := tls.LoadX509KeyPair(certFile, keyFile)
 		if err != nil {
-			me.Log.Error("Cannot Load Cert, Key %s, %s", certFile, keyFile)
+			svr.Log.Error("Cannot Load Cert, Key %s, %s", certFile, keyFile)
 			return
 		}
 		config := &tls.Config{Certificates: []tls.Certificate{cer}}
 
 		tlsLn := tls.NewListener(clLn, config)
 
-		server := &http.Server{Handler: me}
+		server := &http.Server{Handler: svr}
 		server.Serve(tlsLn)
 	}()
 }
 
-func (me *Server) AddController(path string, controller Controller) {
-	me.Root.AddController(path, controller)
+func (svr *Server) AddController(path string, controller Controller) {
+	svr.Root.AddController(path, controller)
 }
 
 // Support the http.Handler ServeHTTP method. This is called once per request
-func (me *Server) ServeHTTP(wr http.ResponseWriter, r *http.Request) {
+func (svr *Server) ServeHTTP(wr http.ResponseWriter, r *http.Request) {
 	path := r.URL.EscapedPath()
 
 	w := NewBufferedResponseWriter()
 	t := time.Now()
 
-	context := NewContext(me, w, r)
+	context := NewContext(svr, w, r)
 
 	defer func() {
 		rec := recover()
@@ -128,16 +128,16 @@ func (me *Server) ServeHTTP(wr http.ResponseWriter, r *http.Request) {
 		w.FlushToResponseWriter(wr)
 
 		elapsed := time.Now().Sub(t).Seconds() / 1000
-		me.Log.Info("[%s] %s %s [%d] (%s/%.2fms)", r.RemoteAddr, r.Method, path, w.StatusCode, size, elapsed)
+		svr.Log.Info("[%s] %s %s [%d] (%s/%.2fms)", r.RemoteAddr, r.Method, path, w.StatusCode, size, elapsed)
 
 		if rec != nil {
-			me.Log.Error("> PANIC: %s", rec)
+			svr.Log.Error("> PANIC: %s", rec)
 		}
 	}()
 
-	ok, err := me.Root.Render(path, context)
+	ok, err := svr.Root.Render(path, context)
 	if err != nil {
-		me.Log.Error("Error while processing [%s] %s %s", r.Method, r.RemoteAddr, path)
+		svr.Log.Error("Error while processing [%s] %s %s", r.Method, r.RemoteAddr, path)
 		w.StatusCode = 500
 		return
 	}

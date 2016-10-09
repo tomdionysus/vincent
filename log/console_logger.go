@@ -26,51 +26,51 @@ func NewConsoleLogger(logLevel string) *ConsoleLogger {
 	return logger
 }
 
-func (me *ConsoleLogger) GetLogLevel() int         { return me.LogLevel }
-func (me *ConsoleLogger) SetLogLevel(loglevel int) { me.LogLevel = loglevel }
+func (clg *ConsoleLogger) GetLogLevel() int         { return clg.LogLevel }
+func (clg *ConsoleLogger) SetLogLevel(loglevel int) { clg.LogLevel = loglevel }
 
 // Logs a Raw message (-----) with the specified message and Printf-style arguments.
-func (me *ConsoleLogger) Raw(message string, args ...interface{}) {
-	me.printLog("-----", message, args...)
+func (clg *ConsoleLogger) Raw(message string, args ...interface{}) {
+	clg.printLog("-----", message, args...)
 }
 
 // Logs a FATAL message with the specified message and Printf-style arguments.
-func (me *ConsoleLogger) Fatal(message string, args ...interface{}) {
-	me.printLog("FATAL", message, args...)
+func (clg *ConsoleLogger) Fatal(message string, args ...interface{}) {
+	clg.printLog("FATAL", message, args...)
 }
 
 // Logs an ERROR message with the specified message and Printf-style arguments.
-func (me *ConsoleLogger) Error(message string, args ...interface{}) {
-	me.printLog("ERROR", message, args...)
+func (clg *ConsoleLogger) Error(message string, args ...interface{}) {
+	clg.printLog("ERROR", message, args...)
 }
 
 // Logs a WARN message with the specified message and Printf-style arguments.
-func (me *ConsoleLogger) Warn(message string, args ...interface{}) {
-	if me.LogLevel > LOG_LEVEL_WARN {
+func (clg *ConsoleLogger) Warn(message string, args ...interface{}) {
+	if clg.LogLevel > LOG_LEVEL_WARN {
 		return
 	}
-	me.printLog("WARN ", message, args...)
+	clg.printLog("WARN ", message, args...)
 }
 
 // Logs an INFO message with the specified message and Printf-style arguments.
-func (me *ConsoleLogger) Info(message string, args ...interface{}) {
-	if me.LogLevel > LOG_LEVEL_INFO {
+func (clg *ConsoleLogger) Info(message string, args ...interface{}) {
+	if clg.LogLevel > LOG_LEVEL_INFO {
 		return
 	}
-	me.printLog("INFO ", message, args...)
+	clg.printLog("INFO ", message, args...)
 }
 
 // Logs a DEBUG message with the specified message and Printf-style arguments.
-func (me *ConsoleLogger) Debug(message string, args ...interface{}) {
-	if me.LogLevel > LOG_LEVEL_DEBUG {
+func (clg *ConsoleLogger) Debug(message string, args ...interface{}) {
+	if clg.LogLevel > LOG_LEVEL_DEBUG {
 		return
 	}
-	me.printLog("DEBUG", message, args...)
+	clg.printLog("DEBUG", message, args...)
 }
 
-func (me *ConsoleLogger) printLog(level string, message string, args ...interface{}) {
-	me.mutex.Lock()
-	defer me.mutex.Unlock()
+func (clg *ConsoleLogger) printLog(level string, message string, args ...interface{}) {
+	clg.mutex.Lock()
+	defer clg.mutex.Unlock()
 
 	fmt.Printf("%s [%s] ", GetTimeUTCString(), level)
 	fmt.Printf(message, args...)

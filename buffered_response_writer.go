@@ -21,27 +21,27 @@ func NewBufferedResponseWriter() *BufferedResponseWriter {
 }
 
 // Return the current headers
-func (me *BufferedResponseWriter) Header() http.Header {
-	return me.Headers
+func (brw *BufferedResponseWriter) Header() http.Header {
+	return brw.Headers
 }
 
 // Write the supplied data
-func (me *BufferedResponseWriter) Write(data []byte) (int, error) {
-	return me.Buffer.Write(data)
+func (brw *BufferedResponseWriter) Write(data []byte) (int, error) {
+	return brw.Buffer.Write(data)
 }
 
 // Set the HTTP status code
-func (me *BufferedResponseWriter) WriteHeader(code int) {
-	me.StatusCode = code
+func (brw *BufferedResponseWriter) WriteHeader(code int) {
+	brw.StatusCode = code
 }
 
 // Write HTTP Status, Headers and Flush all data to the supplied http.ResponseWriter
-func (me *BufferedResponseWriter) FlushToResponseWriter(w http.ResponseWriter) error {
+func (brw *BufferedResponseWriter) FlushToResponseWriter(w http.ResponseWriter) error {
 	outheader := w.Header()
-	for k, v := range me.Headers {
+	for k, v := range brw.Headers {
 		outheader[k] = v
 	}
-	w.WriteHeader(me.StatusCode)
-	_, err := me.Buffer.WriteTo(w)
+	w.WriteHeader(brw.StatusCode)
+	_, err := brw.Buffer.WriteTo(w)
 	return err
 }

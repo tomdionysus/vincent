@@ -19,8 +19,8 @@ func NewParamSegment(paramName string) *ParamSegment {
 }
 
 // Load the current segment value into the context and passthrough.
-func (me *ParamSegment) Render(path string, context *Context) (bool, error) {
-	ok, err := me.CallControllers(context)
+func (psg *ParamSegment) Render(path string, context *Context) (bool, error) {
+	ok, err := psg.CallControllers(context)
 	if !ok || err != nil {
 		return ok, err
 	}
@@ -38,7 +38,7 @@ func (me *ParamSegment) Render(path string, context *Context) (bool, error) {
 		path = path[c+1:]
 	}
 
-	context.Params[me.ParamName] = value
+	context.Params[psg.ParamName] = value
 
-	return me.Passthrough(path, context)
+	return psg.Passthrough(path, context)
 }

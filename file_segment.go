@@ -23,8 +23,8 @@ func NewFileSegment(filename string) *FileSegment {
 
 // If the path refers to this segment, render the supplied path to the context.ResponseWriterponsewriter. Otherwise, passthrough to
 // sub segments.
-func (me *FileSegment) Render(path string, context *Context) (bool, error) {
-	ok, err := me.CallControllers(context)
+func (fsg *FileSegment) Render(path string, context *Context) (bool, error) {
+	ok, err := fsg.CallControllers(context)
 	if !ok || err != nil {
 		return ok, err
 	}
@@ -34,12 +34,12 @@ func (me *FileSegment) Render(path string, context *Context) (bool, error) {
 	if len(path) == 0 {
 		// This is the last segment
 
-		ext := filepath.Ext(me.Filename)
+		ext := filepath.Ext(fsg.Filename)
 		h := context.ResponseWriter.Header()
 
 		h["Content-Type"] = append(h["Content-Type"], mime.TypeByExtension(ext))
 
-		out, err := ioutil.ReadFile(me.Filename)
+		out, err := ioutil.ReadFile(fsg.Filename)
 		if err != nil {
 			return false, err
 		}
@@ -47,5 +47,5 @@ func (me *FileSegment) Render(path string, context *Context) (bool, error) {
 		return true, nil
 	}
 
-	return me.Passthrough(path, context)
+	return fsg.Passthrough(path, context)
 }
